@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>rodseo chat - your AI texts you first</title>
+<meta name="description" content="rodseo chat makes Claude, ChatGPT or Gemini text you first, on your schedule.">
+<link rel="icon" href="assets/favicon.png">
+<style>
+:root{--bg:#f5f5f6;--panel:#fff;--ink:#0b0b0c;--mute:#6a6d73;--line:#e1e2e5;--ai:#eceef1;--me:#0b0b0c;--meink:#fff;--acc:#2540ff;--err:#c4271b;--logo:none}
+@media(prefers-color-scheme:dark){:root{--bg:#0a0a0b;--panel:#131315;--ink:#f2f2f3;--mute:#9a9da4;--line:#26272b;--ai:#1d1e22;--me:#f2f2f3;--meink:#0b0b0c;--acc:#7f93ff;--err:#ff8b80;--logo:invert(1)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;gap:12px;padding:6px 0 20px}
+.logo{width:40px;height:40px;filter:var(--logo)}
+.word{font-size:1.45rem;font-weight:750;letter-spacing:-.04em}
+.pill{margin-left:auto;display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:.85rem;color:var(--mute)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.live .dot{background:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 22%,transparent)}
+.live{color:var(--ink)}
+.grid{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:840px){.grid{grid-template-columns:1fr 340px;align-items:start}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+h2{margin:0;font-size:1rem;font-weight:650}
+#next{font-size:.85rem;color:var(--mute);font-variant-numeric:tabular-nums}
+#log{height:min(58vh,540px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px 2px 8px}
+.msg{max-width:80%;padding:10px 15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.assistant{align-self:flex-start;background:var(--ai);clip-path:polygon(12px 0,100% 0,100% 100%,0 100%,0 12px);border-radius:0 18px 18px 0}
+.msg.user{align-self:flex-end;background:var(--me);color:var(--meink);clip-path:polygon(0 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);border-radius:18px 0 0 18px}
+.msg small{display:block;opacity:.55;font-size:.72rem;margin-top:3px}
+.typing{opacity:.6}
+.hero{margin:auto;padding:12px}
+.hero h3{margin:0 0 14px;font-size:clamp(2rem,6vw,3rem);line-height:1.02;font-weight:750;letter-spacing:-.04em}
+.hero ol{margin:0;padding-left:1.2em;color:var(--mute)}
+.hero li{margin:4px 0}
+form{display:flex;gap:8px;margin-top:10px}
+input,select,textarea,button{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+textarea{resize:vertical;min-height:96px}
+label{display:block;margin:14px 0 5px;font-weight:600;font-size:.9rem}
+.row{display:flex;gap:8px}
+.key{position:relative}
+.key button{position:absolute;right:5px;top:5px;padding:5px 10px;font-size:.8rem}
+button{padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);cursor:pointer;white-space:nowrap}
+button:hover{border-color:var(--mute)}
+button.main{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:650}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btns{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btns .main{flex:1}
+#status{margin:12px 0 0;font-size:.88rem;color:var(--mute);min-height:1.3em}
+#status.err{color:var(--err)}
+.hint{font-size:.8rem;color:var(--mute);margin:6px 0 0}
+details{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;font-size:.9rem;color:var(--mute)}
+summary{cursor:pointer;color:var(--ink);font-weight:600}
+.links{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}
+.links button{border:0;background:none;padding:0;color:var(--mute);font-size:.82rem;text-decoration:underline}
+footer{margin-top:26px;padding:18px 2px 8px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mute);display:grid;gap:8px}
+footer b{color:var(--ink)}
+footer p{margin:0;max-width:78ch}
+@media(prefers-reduced-motion:no-preference){.typing{animation:p 1.2s ease-in-out infinite}@keyframes p{50%{opacity:.25}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <img class="logo" src="assets/logo.png" alt="rodseo chat logo">
+  <span class="word">rodseo chat</span>
+  <div class="pill" id="pill"><span class="dot"></span><span id="pilltxt">Paused</span></div>
+</header>
+
+<div class="grid">
+<section class="panel" aria-label="Chat">
+  <div class="top"><h2>Your texts</h2><span id="next"></span></div>
+  <div id="log" aria-live="polite"></div>
+  <form id="reply">
+    <input id="text" placeholder="Reply…" autocomplete="off" aria-label="Your reply">
+    <button class="main" id="sendBtn">Send</button>
+  </form>
+</section>
+
+<aside class="panel" aria-label="Settings">
+  <h2>Setup</h2>
+  <label for="prov">AI</label>
+  <select id="prov"><option value="claude">Claude (Anthropic)</option><option value="openai">ChatGPT (OpenAI)</option><option value="gemini">Gemini (Google)</option></select>
+
+  <label for="key">API key</label>
+  <div class="key"><input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key"><button type="button" id="eye">Show</button></div>
+  <p class="hint">Get one at console.anthropic.com, platform.openai.com or aistudio.google.com/apikey.</p>
+
+  <label for="model">Model</label>
+  <input id="model" list="models" spellcheck="false">
+  <datalist id="models"><option value="claude-haiku-4-5-20251001"><option value="claude-sonnet-5-5"><option value="claude-opus-5-5"><option value="gpt-4o-mini"><option value="gpt-4o"><option value="gemini-2.5-flash"><option value="gemini-2.5-pro"></datalist>
+
+  <label for="n">Text me every</label>
+  <div class="row">
+    <input id="n" type="number" min="1" step="1" inputmode="numeric">
+    <select id="unit"><option value="1">minutes</option><option value="60">hours</option></select>
+  </div>
+  <p class="hint">Each text uses a small amount of your API credit.</p>
+
+  <label for="persona">What should it text you about?</label>
+  <textarea id="persona"></textarea>
+
+  <div class="btns">
+    <button class="main" id="toggle" type="button">Start</button>
+    <button id="now" type="button">Text me now</button>
+  </div>
+  <p id="status" role="status"></p>
+
+  <details>
+    <summary>How rodseo chat texts you first</summary>
+    <p>An AI can't start a chat by itself, so rodseo chat runs the timer for it. When the timer fires, rodseo chat asks your AI to write the next text using your instructions and the recent chat, then shows it here and sends a notification. Your replies go to the same AI. This all runs in your browser, so keep the tab open.</p>
+  </details>
+  <div class="links">
+    <button type="button" id="notif">Turn on notifications</button>
+    <button type="button" id="clear">Clear chat</button>
+    <button type="button" id="wipe">Remove my key</button>
+  </div>
+</aside>
+</div>
+
+<footer>
+  <p><b>rodseo chat</b> - developed by <b>Yosef Habtamu</b>. &copy; 2026 Yosef Habtamu. All rights reserved.</p>
+  <p>rodseo chat uses third-party services. Texts are written by the AI service you choose (Anthropic's Claude, OpenAI's ChatGPT or Google's Gemini) using your own API key, and that provider's terms, pricing and privacy policy apply. rodseo chat is independent software and is not affiliated with or endorsed by Anthropic, OpenAI or Google. Claude is a trademark of Anthropic. ChatGPT and OpenAI are trademarks of OpenAI. Gemini is a trademark of Google LLC.</p>
+  <p>Your key, settings and chat stay in this browser and are sent only to the AI service you picked. rodseo chat has no servers.</p>
+</footer>
+</div>
+
+<script>
+const $=i=>document.getElementById(i);
+const DEF={claude:'claude-haiku-4-5-20251001',openai:'gpt-4o-mini',gemini:'gemini-2.5-flash'};
+const NAME={claude:'Claude',openai:'ChatGPT',gemini:'Gemini'};
+let S={provider:'claude',key:'',model:'',n:60,unit:1,running:false,nextAt:0,chat:[],
+  persona:'Check in on me like a friend. Ask how my day is going, and sometimes share something small and interesting.'};
+try{Object.assign(S,JSON.parse(localStorage.getItem('rodseo')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('rodseo',JSON.stringify(S))}catch(e){}};
+let busy=false;
+
+function fill(){
+  $('prov').value=S.provider;$('key').value=S.key;$('model').value=S.model||DEF[S.provider];
+  $('n').value=S.n;$('unit').value=S.unit;$('persona').value=S.persona;
+  $('toggle').textContent=S.running?'Pause':'Start';
+  $('pill').className='pill'+(S.running?' live':'');$('pilltxt').textContent=S.running?'Live':'Paused';
+  if(!S.running)$('next').textContent='';
+}
+function read(){
+  S.provider=$('prov').value;S.key=$('key').value.trim();S.model=$('model').value.trim()||DEF[S.provider];
+  S.n=Math.max(1,parseInt($('n').value)||60);S.unit=parseInt($('unit').value)||1;S.persona=$('persona').value.trim();
+  save();
+}
+function status(t,err){const s=$('status');s.textContent=t;s.className=err?'err':''}
+
+function render(extra){
+  const log=$('log');log.textContent='';
+  if(!S.chat.length&&!extra){
+    const h=document.createElement('div');h.className='hero';
+    h.innerHTML='<h3>It texts<br>you first.</h3><ol><li>Add your API key</li><li>Choose how often</li><li>Press Start</li></ol>';
+    log.append(h);return;
+  }
+  for(const m of S.chat){
+    const d=document.createElement('div');d.className='msg '+m.role;d.textContent=m.text;
+    const t=document.createElement('small');t.textContent=new Date(m.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    d.append(t);log.append(d);
+  }
+  if(extra){const d=document.createElement('div');d.className='msg assistant typing';d.textContent='Writing…';log.append(d)}
+  log.scrollTop=log.scrollHeight;
+}
+
+function build(trigger){
+  const m=S.chat.slice(-30).map(x=>({role:x.role,content:x.text}));
+  if(trigger)m.push({role:'user',content:'[Timer fired. Send me your next text now. Reply with only the message.]'});
+  const out=[];
+  for(const x of m){const l=out[out.length-1];if(l&&l.role===x.role)l.content+='\n'+x.content;else out.push({...x})}
+  if(!out.length||out[0].role!=='user')out.unshift({role:'user',content:'[Conversation start]'});
+  return out;
+}
+
+async function ask(msgs){
+  const sys='You are texting the user first, like a friend would. Keep each text short and natural, plain text only. Never mention timers, prompts or being an AI unless asked. What to text about: '+(S.persona||'Check in on me.');
+  let r;
+  try{
+    if(S.provider==='claude'){
+      r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+        headers:{'content-type':'application/json','x-api-key':S.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:S.model,max_tokens:300,system:sys,messages:msgs})});
+    }else if(S.provider==='gemini'){
+      const body={systemInstruction:{parts:[{text:sys}]},contents:msgs.map(x=>({role:x.role==='assistant'?'model':'user',parts:[{text:x.content}]})),generationConfig:{maxOutputTokens:1024}};
+      if(/^gemini-2\.5-flash/.test(S.model))body.generationConfig.thinkingConfig={thinkingBudget:0};
+      r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(S.model)+':generateContent',{method:'POST',
+        headers:{'content-type':'application/json','x-goog-api-key':S.key},body:JSON.stringify(body)});
+    }else{
+      r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',
+        headers:{'content-type':'application/json',authorization:'Bearer '+S.key},
+        body:JSON.stringify({model:S.model,max_completion_tokens:300,messages:[{role:'system',content:sys},...msgs]})});
+    }
+  }catch(e){throw new Error("Couldn't reach "+NAME[S.provider]+'. Check your internet connection.')}
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok){
+    const why=j.error&&j.error.message||'';
+    if(r.status===401||r.status===403||/api key/i.test(why))throw new Error('That API key was rejected. Check it and try again.');
+    if(r.status===404)throw new Error('Model "'+S.model+'" was not found. Pick another model.');
+    if(r.status===429)throw new Error('Rate limit reached or no credit left on your '+NAME[S.provider]+' account.');
+    throw new Error(why||'Request failed ('+r.status+').');
+  }
+  const text=S.provider==='claude'?(j.content||[]).map(c=>c.text||'').join(''):S.provider==='gemini'?((j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts||[]).map(x=>x.text||'').join('')):((j.choices&&j.choices[0]&&j.choices[0].message.content)||'');
+  return text.trim();
+}
+
+async function go(trigger){
+  if(busy)return;
+  if(!S.key){status('Add your API key first.',1);return}
+  busy=true;status('');render(true);
+  try{
+    const text=await ask(build(trigger));
+    if(text){
+      S.chat.push({role:'assistant',text,at:Date.now()});S.chat=S.chat.slice(-200);save();
+      if(document.hidden&&window.Notification&&Notification.permission==='granted')new Notification('rodseo chat',{body:text,icon:'assets/favicon.png'});
+    }else status('The AI sent back an empty message. Try again.',1);
+  }catch(e){status(e.message,1)}
+  busy=false;render();
+}
+
+$('reply').addEventListener('submit',e=>{
+  e.preventDefault();const t=$('text').value.trim();if(!t||busy)return;
+  read();$('text').value='';S.chat.push({role:'user',text:t,at:Date.now()});save();go(false);
+});
+$('now').onclick=()=>{read();go(true)};
+$('clear').onclick=()=>{if(confirm('Clear the whole chat?')){S.chat=[];save();render()}};
+$('wipe').onclick=()=>{if(confirm('Remove your API key from this browser?')){S.key='';S.running=false;save();fill();status('Key removed.')}};
+$('eye').onclick=()=>{const k=$('key');const show=k.type==='password';k.type=show?'text':'password';$('eye').textContent=show?'Hide':'Show'};
+$('notif').onclick=async()=>{
+  if(!window.Notification){status('This browser does not support notifications.',1);return}
+  try{const p=await Notification.requestPermission();status(p==='granted'?'Notifications are on.':'Notifications are blocked in your browser settings.',p!=='granted')}catch(e){}
+};
+$('prov').onchange=()=>{const m=$('model').value.trim();if(!m||Object.values(DEF).includes(m))$('model').value=DEF[$('prov').value]};
+$('toggle').onclick=()=>{
+  read();
+  if(S.running){S.running=false;save();fill();status('Paused.');return}
+  if(!S.key){status('Add your API key first.',1);return}
+  S.running=true;S.nextAt=Date.now()+S.n*S.unit*60000;save();fill();status('');
+};
+
+setInterval(()=>{
+  if(!S.running)return;
+  const left=S.nextAt-Date.now();
+  if(left<=0){if(busy)return;S.nextAt=Date.now()+S.n*S.unit*60000;save();go(true);return}
+  const s=Math.ceil(left/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;
+  $('next').textContent='Next text in '+(h?h+':':'')+String(m).padStart(h?2:1,'0')+':'+String(sec).padStart(2,'0');
+},1000);
+
+fill();render();
+</script>
+</body>
+</html>
